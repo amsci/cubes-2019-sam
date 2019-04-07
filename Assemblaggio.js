@@ -118,5 +118,5 @@ muro.position.set(6,15,45);
 var piede = new THREE.Object3D();
 piede = Assembla(piede_map, [CreaCuboColorato(nos_cube, dark_dark_brown)], piede);
 piede.scale.multiplyScalar(3);
-piede.position.set(0,60,-60);
+piede.position.set(0,60,-100);
 

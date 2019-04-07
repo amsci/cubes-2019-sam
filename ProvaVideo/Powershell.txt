@@ -1,0 +1,1 @@
+.\ffmpeg.exe -i 00%05d.png -c:v h264 test.mp4

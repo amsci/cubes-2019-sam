@@ -3,7 +3,8 @@ var scene, camera, renderer, controls, stats;
 
 function Start() {
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    blank_scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 500 );
 
     renderer = new THREE.WebGLRenderer( {antialias: true} );
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -47,9 +48,9 @@ function Start() {
     dirLight.shadow.camera.right = 30;
     dirLight.shadow.camera.top = 30;
     //dirLight.shadow.camera.scale.multiplyScalar(10);
-    console.log(dirLight);
-    const cameraHelper = new THREE.CameraHelper(dirLight.shadow.camera);
-    scene.add(cameraHelper);
+    // console.log(dirLight);
+    // const cameraHelper = new THREE.CameraHelper(dirLight.shadow.camera);
+    // scene.add(cameraHelper);
 
 
     // GROUND
@@ -62,15 +63,36 @@ function Start() {
     scene.add( ground );
     ground.receiveShadow = true;
     
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
-    document.body.appendChild( stats.domElement );
+    // stats = new Stats();
+    // stats.domElement.style.position = 'absolute';
+    // stats.domElement.style.top = '0px';
+    // document.body.appendChild( stats.domElement );
 
-    //controls = new THREE.OrbitControls( camera );
-    //controls.addEventListener( 'change', Render );
+    capturer = new CCapture( { format: 'png' } ); // per catturare i fotogrammi
 }
 
+document.addEventListener('keydown', ReadInput);
+function ReadInput(input){
+    if(input.key == " "){
+        capturer.start();
+    }
+    if(input.key == "Enter"){
+        capturer.stop();
+        capturer.save();
+    }
+}
+
+
+
+// controls = new THREE.OrbitControls( camera );
+// flag_controls = 0;
+// document.addEventListener('keydown', ReadInput);
+// function ReadInput(input){
+//     if(input.key == " "){
+//         controls.addEventListener( 'change', Render );
+//         flag_controls = 1;
+//     }
+// }
 
 function Oscilla(obj, dir, ref_pos, A, omega, time){
     var displacement = dir.clone();
@@ -82,9 +104,12 @@ function Oscilla(obj, dir, ref_pos, A, omega, time){
 
 
 var inizio=Date.now();
-t_avvicina = 11000;
-t_sguardo = t_avvicina+2000;
-t_cameraUp = t_sguardo + 3000;
+var flag_capture = 0;
+t_avvicina = 0; //11000;
+t_sguardo = 0;// t_avvicina+2000;
+t_cameraUp = 0;//t_sguardo + 2500;
+t_cambio1 = 1000;//t_cameraUp + 2000;
+i_fisso = 0;//1000;
 
 function Update() {
     var time = Date.now() - inizio;
@@ -94,15 +119,53 @@ function Update() {
         Oscilla(occhi, asse_chiocciola, pos_occhi, .1, .003, time);
         Oscilla(guscio, asse_chiocciola, pos_guscio, .3, .003, time);
         camera.position.z += .04;
+        renderer.render(scene, camera);
     }
     if(time < t_sguardo && time > t_avvicina) {
         occhi.rotation.x -=.01; //meglio usare le posizioni relative
         occhi.position.y += .002;
-    } 
-    stats.update();
-    Render();
+        renderer.render(scene, camera);
+        //capturer.capture( canvas );
+    }
+    if(time < t_cameraUp && time > t_sguardo) {
+        camera.rotation.y += .014;
+        camera.rotation.x -= .0075;
+        camera.position.x -= .04;
+        renderer.render(scene, camera);
+        //capturer.capture( canvas );
+    }
+    if(time > t_cameraUp+i_fisso && time < t_cambio1) {//metti un flag per non ripetere
+        occhi.rotation.x = 0;
+        occhi.position.copy(pos_occhi);
+        chiocciola.rotation.x = -Math.PI/2;  
+        chiocciola.position.set(15,18,29.5);
+        camera.position.set(17,25,21);
+        camera.lookAt(chiocciola.position.clone().add(new THREE.Vector3(2,3,0)));
+        renderer.setClearColor("hsl(204, 100%, 0%)"); 
+        renderer.render(blank_scene, camera);
+    }
+    // if(flag_capture==0){
+    //     capturer.start();
+    //     flag_capture =1;
+    // }
+    if(time > t_cambio1) {
+        renderer.setClearColor("hsl(204, 100%, 60%)"); //metti un flag per non ripetere
+        renderer.render(scene, camera);
+        Oscilla(occhi, asse_chiocciola, pos_occhi, .1, .003, time);
+        Oscilla(guscio, asse_chiocciola, pos_guscio, .3, .003, time);
+        capturer.capture( renderer.domElement );
+    }
+    // if(time > t_cambio1+2000) {
+    //     if(flag_capture==1){
+    //         capturer.stop();
+    //         capturer.save();
+    //         flag_capture = 2;
+    //     }
+    // }
+    //if(flag_controls==1) controls.update();
+    // stats.update();
+    //Render();
 }
-console.log(pos_occhi);
 
 function Render() {
     renderer.render(scene, camera);
