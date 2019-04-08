@@ -105,11 +105,13 @@ function Oscilla(obj, dir, ref_pos, A, omega, time){
 
 var inizio=Date.now();
 var flag_capture = 0;
-t_avvicina = 0; //11000;
-t_sguardo = 0;// t_avvicina+2000;
-t_cameraUp = 0;//t_sguardo + 2500;
-t_cambio1 = 1000;//t_cameraUp + 2000;
-i_fisso = 0;//1000;
+t_avvicina = 11000;
+t_sguardo = t_avvicina+2000;
+t_cameraUp = t_sguardo + 2500;
+t_cambio1 = t_cameraUp + 2000;
+t_end = t_cambio1+5000;
+
+i_fisso = 1000;
 
 function Update() {
     var time = Date.now() - inizio;
@@ -125,14 +127,12 @@ function Update() {
         occhi.rotation.x -=.01; //meglio usare le posizioni relative
         occhi.position.y += .002;
         renderer.render(scene, camera);
-        //capturer.capture( canvas );
     }
     if(time < t_cameraUp && time > t_sguardo) {
         camera.rotation.y += .014;
         camera.rotation.x -= .0075;
         camera.position.x -= .04;
         renderer.render(scene, camera);
-        //capturer.capture( canvas );
     }
     if(time > t_cameraUp+i_fisso && time < t_cambio1) {//metti un flag per non ripetere
         occhi.rotation.x = 0;
@@ -144,27 +144,16 @@ function Update() {
         renderer.setClearColor("hsl(204, 100%, 0%)"); 
         renderer.render(blank_scene, camera);
     }
-    // if(flag_capture==0){
-    //     capturer.start();
-    //     flag_capture =1;
-    // }
-    if(time > t_cambio1) {
+    if(time > t_cambio1 && time < t_end) {
         renderer.setClearColor("hsl(204, 100%, 60%)"); //metti un flag per non ripetere
         renderer.render(scene, camera);
         Oscilla(occhi, asse_chiocciola, pos_occhi, .1, .003, time);
         Oscilla(guscio, asse_chiocciola, pos_guscio, .3, .003, time);
-        capturer.capture( renderer.domElement );
+    }if(time > t_end) {
+        renderer.setClearColor("hsl(204, 100%, 0%)"); //metti un flag per non ripetere
+        renderer.render(blank_scene, camera);
     }
-    // if(time > t_cambio1+2000) {
-    //     if(flag_capture==1){
-    //         capturer.stop();
-    //         capturer.save();
-    //         flag_capture = 2;
-    //     }
-    // }
-    //if(flag_controls==1) controls.update();
-    // stats.update();
-    //Render();
+    capturer.capture( renderer.domElement );
 }
 
 function Render() {
